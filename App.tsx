@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, CheckCircle2, AlertTriangle, BarChart3, ArrowRight, Loader2, Globe, ExternalLink, RefreshCw, Zap, Search, Layout, Smartphone, Target, Info, Sparkles, CreditCard, Copy, Check, MessageSquareCode, Award, Share2, BrainCircuit, Mic, Bot, ShieldAlert, Code2, Cpu, Network, Activity, Smile } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
-import { AnalysisStep, SEOAuditReport, Recommendation } from './types';
-import { analyzeRepository } from './services/gemini';
+import { AnalysisStep, SEOAuditReport, Recommendation } from './types.ts';
+import { analyzeRepository } from './services/gemini.ts';
 
 const App: React.FC = () => {
   const [url, setUrl] = useState('https://google.com');

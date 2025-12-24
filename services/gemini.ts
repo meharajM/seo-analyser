@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { SEOAuditReport } from "../types";
+import { SEOAuditReport } from "../types.ts";
 
 const MODEL_NAME = 'gemini-3-pro-preview';
 
