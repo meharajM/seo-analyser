@@ -2,24 +2,31 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { SEOAuditReport } from "../types.ts";
 
-const MODEL_NAME = 'gemini-3-pro-preview';
+// Using Flash for better reliability and lower latency in structured JSON generation
+const MODEL_NAME = 'gemini-3-flash-preview';
 
 export const analyzeRepository = async (siteUrl: string): Promise<SEOAuditReport> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
-
-  const prompt = `Perform the "Ultimate 360° Cognitive SEO Audit" for: ${siteUrl}. 
-  Act as a Global SEO Architect. This is the final stage of analysis covering the "Cognitive Search" layer:
+  const apiKey = process.env.API_KEY || "";
   
-  1. **Entity SEO & Topical Authority**: Identify the primary "Entities" (People, Places, Things) the site is associated with. Evaluate the site's "Topical Breadth" and how it connects to the Google Knowledge Graph.
-  2. **Search Intent Alignment**: Does the content type (Video, Blog, Tool) match the user's intent (Informational, Transactional, Navigational)? Identify "Intent Mismatches."
-  3. **NLP Sentiment & Tone**: Analyze the writing sentiment. Is the tone appropriate for the E-E-A-T requirements of the niche (e.g., high-trust for finance, conversational for lifestyle)?
-  4. **JavaScript & Deep Tech**: Rendering pipeline efficiency, hydration bottlenecks, and Core Web Vitals (INP focus).
-  5. **Crawl Budget & Security**: Internal link equity distribution and security headers (CSP, HSTS).
-  6. **AI-Search (SGE) Readiness**: Formatting for AI citation and information gain.
-  7. **Visual & Voice Search**: Metadata for Alexa/Siri and visual search optimization.
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please ensure process.env.API_KEY is configured.");
+  }
 
-  Use Google Search to fetch real-time data about the domain's entity associations, ranking stability, and technical health.
-  Produce a JSON report that ranks the site against these cognitive pillars.`;
+  const ai = new GoogleGenAI({ apiKey });
+
+  const prompt = `Perform a comprehensive "Cognitive & Technical SEO Audit" for the domain: ${siteUrl}.
+  
+  Act as a Senior Technical SEO Consultant. Analyze the site across these specific dimensions:
+  1. Entity SEO & Topical Authority: Knowledge Graph associations.
+  2. Search Intent Alignment: Content type vs User psychology.
+  3. NLP Sentiment: Tone consistency for the niche.
+  4. Technical Depth: JS Rendering, hydration, and Core Web Vitals.
+  5. Architecture: Crawl budget and link equity.
+  6. AI/SGE Readiness: Visibility in AI summaries.
+  7. Security: Trust signals (SSL, headers).
+
+  Use the googleSearch tool to gather real-time data about the site's footprint and technical profile.
+  Return a valid JSON object following the requested schema.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -28,6 +35,13 @@ export const analyzeRepository = async (siteUrl: string): Promise<SEOAuditReport
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
+        // Lowering safety thresholds to allow technical analysis of security/vulnerabilities
+        safetySettings: [
+          { category: 'HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+        ],
         responseSchema: {
           type: Type.OBJECT,
           properties: {
@@ -39,7 +53,7 @@ export const analyzeRepository = async (siteUrl: string): Promise<SEOAuditReport
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  category: { type: Type.STRING, description: "Include 'Entity SEO', 'Intent Alignment', 'Sentiment', 'SGE Readiness', etc." },
+                  category: { type: Type.STRING },
                   score: { type: Type.NUMBER },
                   status: { type: Type.STRING }
                 },
@@ -67,7 +81,12 @@ export const analyzeRepository = async (siteUrl: string): Promise<SEOAuditReport
       }
     });
 
-    const report: SEOAuditReport = JSON.parse(response.text || "{}");
+    const textOutput = response.text;
+    if (!textOutput) {
+      throw new Error("The model returned an empty response.");
+    }
+
+    const report: SEOAuditReport = JSON.parse(textOutput);
     
     if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
       report.sourceUrls = response.candidates[0].groundingMetadata.groundingChunks
@@ -79,8 +98,17 @@ export const analyzeRepository = async (siteUrl: string): Promise<SEOAuditReport
     }
 
     return report;
-  } catch (error) {
-    console.error("Cognitive Audit Error:", error);
-    throw new Error("Audit failed. The site profile is too complex or restricted for a deep cognitive scan.");
+  } catch (error: any) {
+    console.error("Gemini API Error Detail:", error);
+    
+    // Check for specific common errors
+    if (error.message?.includes("429")) {
+      throw new Error("Rate limit exceeded. Please wait a moment before trying again.");
+    }
+    if (error.message?.includes("403")) {
+      throw new Error("API Key permissions error. Please check your Google Cloud Console project.");
+    }
+    
+    throw new Error(`Audit failed: ${error.message || "Unknown technical error during scan."}`);
   }
 };

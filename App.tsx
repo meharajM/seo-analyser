@@ -40,6 +40,7 @@ const App: React.FC = () => {
     if (!url) return;
     setStep(AnalysisStep.FETCHING);
     setError(null);
+    setReport(null);
     
     try {
       setStep(AnalysisStep.ANALYZING);
@@ -47,7 +48,7 @@ const App: React.FC = () => {
       setReport(result);
       setStep(AnalysisStep.COMPLETED);
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message || 'An unexpected error occurred during the site scan.');
       setStep(AnalysisStep.ERROR);
     }
   };
@@ -159,9 +160,26 @@ Ensure the solution is future-proof for the 2025-2026 AI Search era.`;
           <span className="flex items-center gap-1.5"><Cpu size={12} className="text-sky-400" /> Deep Tech</span>
         </div>
         {error && (
-          <div className="mt-6 p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center gap-4 animate-fade-up">
-            <AlertTriangle size={24} />
-            <span className="font-medium">{error}</span>
+          <div className="mt-6 p-6 rounded-3xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex flex-col items-start gap-2 animate-fade-up">
+            <div className="flex items-center gap-3">
+              <AlertTriangle size={24} />
+              <span className="font-bold text-lg">Scan Blocked or Failed</span>
+            </div>
+            <p className="text-sm opacity-80 pl-9">{error}</p>
+            <div className="mt-4 pl-9 flex gap-3">
+              <button 
+                onClick={handleAnalyze} 
+                className="text-xs font-black uppercase tracking-widest px-4 py-2 bg-rose-500/20 rounded-xl hover:bg-rose-500/30 transition-colors"
+              >
+                Try Again
+              </button>
+              <button 
+                onClick={() => setUrl('https://google.com')} 
+                className="text-xs font-black uppercase tracking-widest px-4 py-2 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+              >
+                Try Test URL
+              </button>
+            </div>
           </div>
         )}
       </section>
