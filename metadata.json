@@ -1,0 +1,7 @@
+{
+  "name": "Web SEO Guard - Site Audit Tool",
+  "description": "A powerful AI-driven tool for analyzing any website's SEO health. Get technical reports, performance insights, and actionable growth recommendations instantly.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
